@@ -1,0 +1,114 @@
+<html style="width: 100%; height:100%; overflow-x: hidden;">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="css/style.css" TYPE="text/css" MEDIA="screen" />
+<link rel="stylesheet" href="css/jquery-ui-1.10.3.custom.min.css" />
+<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+<script type="text/javascript" src="js/lodash.compat.min.js"></script>
+<script type="text/javascript" src="xdi.js"></script>
+
+<script type="text/javascript">
+
+function findCloud() {
+	xdi.discovery(
+		$("#cloudName").val(),
+		function(discovery) {
+			$("#cloudNumber").text(discovery.cloudNumber());
+			$("#xdiEndpoint").text(discovery.xdiEndpoint());
+		},
+		function(errorText) {
+			alert(errorText);
+		}
+	);
+}
+
+function prepareAndSendMessage() {
+
+	message = xdi.message($("#cloudNumber").text());
+	message.toAddress("(" + $("#cloudNumber").text() + ")");
+	message.linkContract("(" + $("#cloudNumber").text() + "/" + $("#cloudNumber").text() + ")$do");
+	message.secretToken($("#secretToken").val());
+	message.operation("$get", $("#cloudNumber").text() + "[#receipt]");
+
+	message.send(
+
+		$("#xdiEndpoint").text(),
+		function(response) {
+			
+			var receipts = response.root().context($("#cloudNumber").text() + "[#receipt]");
+			
+			for (var i in receipts.contexts()) {
+				
+				var buffer = "";
+				var receipt = receipts.context(i);
+				receipt = receipt.dereference();
+				
+				var timestamp = receipt.context("<$t>&");
+				var privacypolicyuri = receipt.context("<#privacy><#policy><$uri>&");
+				var cookiepolicyuri = receipt.context("<#cookie><#policy><$uri>&");
+				var tosuri = receipt.context("<#tos><$uri>&");
+				var sig = receipt.context("<$sig>&");
+				
+				buffer += "Receipt ID: " + receipt.xri().string() + "<br>";
+				buffer += "Timestamp: " + timestamp.literal().data() + "<br>";
+				buffer += "Privacy Policy URL: " + privacypolicyuri.literal().data();
+				buffer += "Cookie Policy URL: " + cookiepolicyuri.literal().data();
+				buffer += "TOS URL: " + tosuri.literal().data();
+				buffer += "Signature: " + sig.literal().data();
+				
+				var purposes = receipt.context("[<#purpose>]");
+				for (var ii in purposes.contexts()) {
+					var purpose = purposes.context(ii).context("&");
+					buffer += "Purpose " + ii + ": " + purpose.literal().data();
+				}
+				
+				$('#receipts').html();
+				var receiptDiv = document.createElement('div');
+                receiptDiv.setAttribute('class','receipt');
+                $(receiptDiv).html(buffer);
+                $(receiptDiv).appendTo('#receipts');
+            }
+		},
+		function(errorText) {
+			alert(errorText);
+		}
+	);
+}
+
+</script>
+
+</head>
+
+<body style="width: 100%; height:100%; overflow-x: hidden;">
+
+<img src="img/RNLogo.png" style="float:right">
+<img src="img/on-logo.png">
+
+<br style="clear:both">
+
+<h2>Step 1:</h2>
+
+<p>Type your Respect Network Cloud Name:</p>
+<input type="text" id="cloudName" placeholder="=yourname">
+<button onclick="findCloud();">Find my Personal Cloud</button>
+
+<p><b>Your Cloud Number:</b> <span id="cloudNumber"></span></p>
+<p><b>Your Personal Cloud:</b> <span id="xdiEndpoint"></span></p>
+
+<h2>Step 2:</h2>
+
+<p>Find Consent Receipts in my Personal Cloud:</p>
+<input type="text" id="secretToken" placeholder="your secret token">
+<button onclick="prepareAndSendMessage();">Send XDI message</button>
+
+<div id="receipts">
+</div>
+
+</pre>
+
+</body>
+
+</html>
