@@ -1,4 +1,4 @@
-<html style="width: 100%; height:100%; overflow-x: hidden;">
+<html style="width: 100%; height:100%;">
 
 <head>
 
@@ -52,18 +52,20 @@ function prepareAndSendMessage() {
 				var tosuri = receipt.context("<#tos><$uri>&");
 				var sig = receipt.context("<$sig>&");
 				
-				buffer += "Receipt ID: " + receipt.xri().string() + "<br>";
-				buffer += "Timestamp: " + timestamp.literal().data() + "<br>";
-				buffer += "Privacy Policy URL: " + privacypolicyuri.literal().data();
-				buffer += "Cookie Policy URL: " + cookiepolicyuri.literal().data();
-				buffer += "TOS URL: " + tosuri.literal().data();
-				buffer += "Signature: " + sig.literal().data();
+				buffer += "<b>Receipt ID:</b> " + receipt.xri().string() + "<br>";
+				buffer += "<b>Timestamp:</b> " + timestamp.literal().data() + "<br>";
+				buffer += "<b>Privacy Policy URL:</b> <a href=\"" + tosuri.literal().data() + "\">" + privacypolicyuri.literal().data() + "</a><br>";
+				buffer += "<b>Cookie Policy URL:</b> <a href=\"" + tosuri.literal().data() + "\">" + cookiepolicyuri.literal().data() + "</a><br>";
+				buffer += "<b>TOS URL:</b> <a href=\"" + tosuri.literal().data() + "\">" + tosuri.literal().data() + "</a><br>";
+				buffer += "<b>Signature:</b> " + sig.literal().data() + "<br>";
 				
 				var purposes = receipt.context("[<#purpose>]");
 				for (var ii in purposes.contexts()) {
 					var purpose = purposes.context(ii).context("&");
-					buffer += "Purpose " + ii + ": " + purpose.literal().data();
+					buffer += "<b>Purpose " + ii + ":</b> " + purpose.literal().data() + "<br><br>";
 				}
+
+				buffer += "<textarea style=\"width:100%\"> " + response.serializeXDIJSON() + "</textarea><br>";
 				
 				$('#receipts').html();
 				var receiptDiv = document.createElement('div');
@@ -82,7 +84,7 @@ function prepareAndSendMessage() {
 
 </head>
 
-<body style="width: 100%; height:100%; overflow-x: hidden;">
+<body style="width: 100%; height:100%;">
 
 <img src="img/RNLogo.png" style="float:right">
 <img src="img/on-logo.png">
@@ -101,8 +103,10 @@ function prepareAndSendMessage() {
 <h2>Step 2:</h2>
 
 <p>Find Consent Receipts in my Personal Cloud:</p>
-<input type="text" id="secretToken" placeholder="your secret token">
+<input type="password" id="secretToken" placeholder="your secret token">
 <button onclick="prepareAndSendMessage();">Send XDI message</button>
+
+<h2>Receipts:</h2>
 
 <div id="receipts">
 </div>
